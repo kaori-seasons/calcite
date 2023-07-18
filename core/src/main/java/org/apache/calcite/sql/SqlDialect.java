@@ -139,19 +139,21 @@ public class SqlDialect {
 
 
   //~ Instance fields --------------------------------------------------------
+  //列表的标识符
+  protected final @Nullable String identifierQuoteString; //标识符的开始符号
+  protected final @Nullable String identifierEndQuoteString; //标识符的结束符号
+  protected final @Nullable String identifierEscapedQuote; //标识符的转义字符
+  protected final String literalQuoteString; //常量开始符号
+  protected final String literalEndQuoteString; //常量结束符号
+  protected final String literalEscapedQuote; //常量的转义符
+  private final DatabaseProduct databaseProduct; //所属的数据库产品
+  protected final NullCollation nullCollation; // 在进行排序查询式
+  private final RelDataTypeSystem dataTypeSystem; //数据类型
 
-  protected final @Nullable String identifierQuoteString;
-  protected final @Nullable String identifierEndQuoteString;
-  protected final @Nullable String identifierEscapedQuote;
-  protected final String literalQuoteString;
-  protected final String literalEndQuoteString;
-  protected final String literalEscapedQuote;
-  private final DatabaseProduct databaseProduct;
-  protected final NullCollation nullCollation;
-  private final RelDataTypeSystem dataTypeSystem;
-  private final Casing unquotedCasing;
-  private final Casing quotedCasing;
-  private final boolean caseSensitive;
+  //和解析相关
+  private final Casing unquotedCasing; //大写转换
+  private final Casing quotedCasing; //小写转换
+  private final boolean caseSensitive; //是否大小写敏感
 
   //~ Constructors -----------------------------------------------------------
 
@@ -822,6 +824,7 @@ public class SqlDialect {
   * <p>If this method returns null, the cast will be omitted. In the default
   * implementation, this is the case for the NULL type, and therefore
   * {@code CAST(NULL AS <nulltype>)} is rendered as {@code NULL}. */
+ //这个方法可以根据具体的数据源的数据类型进行转换
   public @Nullable SqlNode getCastSpec(RelDataType type) {
     int maxPrecision = -1;
     int maxScale = -1;
@@ -973,6 +976,7 @@ public class SqlDialect {
   }
 
   /** Unparses offset/fetch using "LIMIT fetch OFFSET offset" syntax. */
+  // limit
   protected static void unparseFetchUsingLimit(SqlWriter writer, @Nullable SqlNode offset,
       @Nullable SqlNode fetch) {
     Preconditions.checkArgument(fetch != null || offset != null);
@@ -1333,6 +1337,7 @@ public class SqlDialect {
     VERTICA("Vertica", "\"", NullCollation.HIGH),
     SQLSTREAM("SQLstream", "\"", NullCollation.HIGH),
     SPARK("Spark", null, NullCollation.LOW),
+    DORIS("", null, NullCollation.LOW),
 
     /** Paraccel, now called Actian Matrix. Redshift is based on this, so
      * presumably the dialect capabilities are similar. */

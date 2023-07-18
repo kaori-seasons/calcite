@@ -29,6 +29,7 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.SqlSetOption;
 import org.apache.calcite.sql.SqlWriterConfig;
 import org.apache.calcite.sql.dialect.AnsiSqlDialect;
+import org.apache.calcite.sql.dialect.DorisSqlDialect;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.apache.calcite.sql.parser.SqlParser.Config;
 import org.apache.calcite.sql.pretty.SqlPrettyWriter;
@@ -1343,8 +1344,8 @@ public class SqlParserTest {
   }
 
   /** Parses a list of statements (that contains only one statement). */
-  @Test void testStmtListWithSelect() {
-    final String expected = "SELECT *\n"
+  @Test public void testStmtListWithSelect() {
+    final String expected = "insert into xxx SELECT ROW(SUBSTRING(id,1,16))\n"
         + "FROM `EMP`,\n"
         + "`DEPT`";
     sql("select * from emp, dept").list().ok(expected);
@@ -3596,6 +3597,21 @@ public class SqlParserTest {
     sql(sql5).withDialect(SparkSqlDialect.DEFAULT).ok(expected5);
   }
 
+  @Test public void testDorisSql() {
+    final String sql1 = "CREATE  TABLE `mydb.dept`(  \n"
+  +
+        "  `dept_no` int,   \n"
+  +
+        "  `addr` string,   \n"
+  +
+        "  `tel` string)\n"
+  +
+        "partitioned by(date string ) \n"
+  +
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ; \n";
+    sql(sql1).withDialect(DorisSqlDialect.DEFAULT).ok(sql1);
+  }
+
   /** Test case that does not reproduce but is related to
    * <a href="https://issues.apache.org/jira/browse/CALCITE-1238">[CALCITE-1238]
    * Unparsing LIMIT without ORDER BY after validation</a>. */
@@ -3683,6 +3699,7 @@ public class SqlParserTest {
         .withConformance(SqlConformanceEnum.DEFAULT)
         .fails(error);
 
+    // "limit 2" overrides the earlier "offset 4"
     // "limit 2" overrides the earlier "offset 4"
     final String expected3 = "SELECT `A`\n"
         + "FROM `FOO`\n"
